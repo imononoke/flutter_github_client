@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:github/pages/showJson.dart';
 
 Dio dio = Dio();
 
@@ -25,10 +26,11 @@ class RepoListState extends State<RepoList> {
   int total = 0;
   var list = [];
 
+  final String baseUrl = 'https://api.github.com/search/repositories?q=';
+
   void getList() async {
     try {
-      var response = await dio.get(
-          'https://api.github.com/search/repositories?q=${widget.category}');
+      var response = await dio.get(baseUrl + widget.category);
       var res = response.data;
       if (kDebugMode) {
         print(res);
@@ -54,81 +56,95 @@ class RepoListState extends State<RepoList> {
 
   @override
   Widget build(BuildContext context) {
-    return //Expanded(
-        // child:
-    ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (BuildContext cxt, int index) {
-              var item = list[index];
-              return GestureDetector(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return RepoDetail(
-                        name: item['name'],
-                        fullName: item['full_name'],
-                        htmlUrl: item['html_url'],
-                      );
-                    }));
-                  },
-                  child: Container(
-                      height: 160,
-                      padding: const EdgeInsets.only(left: 12),
-                      decoration: const BoxDecoration(
-                          border: Border(top: BorderSide(color: Colors.grey))),
-                      child: Align(
-                          alignment: Alignment.center,
-                          child: Row(children: <Widget>[
+    return ListView.builder(
+        itemCount: list.length,
+        itemBuilder: (BuildContext cxt, int index) {
+          var item = list[index];
+          return GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return RepoDetail(
+                    name: item['name'],
+                    fullName: item['full_name'],
+                    htmlUrl: item['html_url'],
+                  );
+                }));
+              },
+              child: Container(
+                  height: 160,
+                  padding: const EdgeInsets.only(left: 10, top: 15),
+                  decoration: const BoxDecoration(
+                      border: Border(top: BorderSide(color: Colors.grey))),
+                  child: Align(
+                      alignment: Alignment.center,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
                             // avatar
                             if (item['owner']['avatar_url'] != null)
                               Image.network(
                                 item['owner']['avatar_url'],
-                                width: 120,
-                                height: 120,
+                                width: 100,
+                                height: 100,
                                 fit: BoxFit.cover,
                               ),
 
                             // info
                             Container(
-                              padding: const EdgeInsets.only(left: 12),
-                              height: 120,
+                              padding: const EdgeInsets.only(left: 20),
+                              width: 240,
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+                                  // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: <Widget>[
-                                    Text(
-                                      item["name"],
-                                      style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                    Container(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 10),
+                                      child: Text(
+                                        item["name"],
+                                        style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                     ),
-
-                                    SizedBox(
-                                        width: 260,
+                                    Container(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 10),
                                         child: Text(
                                           item["full_name"],
                                           style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500),
                                         )),
-
-                                    SizedBox(
-                                        width: 260,
-                                        child: Text(
-                                          item['html_url'],
-                                          style: const TextStyle(fontSize: 14),
-                                        )),
-
-                                    // SizedBox(
-                                    //     width: 260,
-                                    //     child: item['description']?.Text(item['description'])
-                                    // )
+                                    Expanded(
+                                        child: Container(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 15),
+                                            child: SingleChildScrollView(
+                                                scrollDirection: Axis.vertical,
+                                                child: Text(
+                                                    // if description is null, show empty
+                                                    item['description'] ?? ' ',
+                                                    style: const TextStyle(
+                                                        fontSize: 16)))))
                                   ]),
-                            )
+                            ),
+
+                            Align(
+                                alignment: Alignment.topLeft,
+                                child: IconButton(
+                                    onPressed: () {
+                                      // show json file
+                                      var url = item['url'];
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) {
+                                        return ShowJson(url: url);
+                                      }));
+                                    },
+                                    iconSize: 24,
+                                    icon: const Icon(Icons.file_open)))
                           ]))));
-            });
-    // );
-    //'Category: ${widget.category} -- ${list.length}');
+        });
   }
 }
